@@ -1,56 +1,84 @@
 /**
- * Design System - Typography
+ * Design System - Typography with Font Size Support
  */
 
-export const typography = {
-  h1: {
-    fontSize: 32,
-    fontWeight: "bold",
-    lineHeight: 40,
-  },
-  h2: {
-    fontSize: 28,
-    fontWeight: "bold",
-    lineHeight: 36,
-  },
-  h3: {
-    fontSize: 24,
-    fontWeight: "600",
-    lineHeight: 32,
-  },
-  h4: {
-    fontSize: 20,
-    fontWeight: "600",
-    lineHeight: 28,
-  },
-  h5: {
-    fontSize: 18,
-    fontWeight: "600",
-    lineHeight: 24,
-  },
-  h6: {
-    fontSize: 16,
-    fontWeight: "600",
-    lineHeight: 22,
-  },
-  body1: {
-    fontSize: 16,
-    lineHeight: 24,
-  },
-  body2: {
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  caption: {
-    fontSize: 12,
-    lineHeight: 16,
-  },
-  overline: {
-    fontSize: 10,
-    lineHeight: 16,
-    textTransform: "uppercase",
-    letterSpacing: 1.5,
-  },
+const baseFontSizes = {
+  h1: 32,
+  h2: 28,
+  h3: 24,
+  h4: 20,
+  h5: 18,
+  h6: 16,
+  body1: 16,
+  body2: 14,
+  caption: 12,
+  overline: 10,
 };
+
+// Font size multipliers
+export const fontSizeMultipliers = {
+  small: 0.875,   // 87.5%
+  medium: 1.0,    // 100%
+  large: 1.125,   // 112.5%
+};
+
+// Function to get typography based on font size setting
+export const getTypography = (fontSizeSetting = "medium") => {
+  const multiplier = fontSizeMultipliers[fontSizeSetting] || 1.0;
+
+  return {
+    h1: {
+      fontSize: Math.round(baseFontSizes.h1 * multiplier),
+      fontWeight: "bold",
+      lineHeight: Math.round(40 * multiplier),
+    },
+    h2: {
+      fontSize: Math.round(baseFontSizes.h2 * multiplier),
+      fontWeight: "bold",
+      lineHeight: Math.round(36 * multiplier),
+    },
+    h3: {
+      fontSize: Math.round(baseFontSizes.h3 * multiplier),
+      fontWeight: "600",
+      lineHeight: Math.round(32 * multiplier),
+    },
+    h4: {
+      fontSize: Math.round(baseFontSizes.h4 * multiplier),
+      fontWeight: "600",
+      lineHeight: Math.round(28 * multiplier),
+    },
+    h5: {
+      fontSize: Math.round(baseFontSizes.h5 * multiplier),
+      fontWeight: "600",
+      lineHeight: Math.round(24 * multiplier),
+    },
+    h6: {
+      fontSize: Math.round(baseFontSizes.h6 * multiplier),
+      fontWeight: "600",
+      lineHeight: Math.round(22 * multiplier),
+    },
+    body1: {
+      fontSize: Math.round(baseFontSizes.body1 * multiplier),
+      lineHeight: Math.round(24 * multiplier),
+    },
+    body2: {
+      fontSize: Math.round(baseFontSizes.body2 * multiplier),
+      lineHeight: Math.round(20 * multiplier),
+    },
+    caption: {
+      fontSize: Math.round(baseFontSizes.caption * multiplier),
+      lineHeight: Math.round(16 * multiplier),
+    },
+    overline: {
+      fontSize: Math.round(baseFontSizes.overline * multiplier),
+      lineHeight: Math.round(16 * multiplier),
+      textTransform: "uppercase",
+      letterSpacing: 1.5,
+    },
+  };
+};
+
+// Default export (medium size for backwards compatibility)
+export const typography = getTypography("medium");
 
 export default typography;

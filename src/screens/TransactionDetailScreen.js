@@ -1,14 +1,18 @@
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { getTransactionDetail } from "../api/user";
 import { Card } from "react-native-paper";
-import { colors, spacing, typography } from "../theme";
+import { spacing } from "../theme";
+import { useSettings } from "../context/SettingsContext";
 
 export default function TransactionDetailScreen({ route }) {
   const { id } = route.params;
   const [trx, setTrx] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const { colors, typography } = useSettings();
+  const styles = useMemo(() => createStyles(colors, typography), [colors, typography]);
 
   useEffect(() => {
     getTransactionDetail(id)
@@ -63,7 +67,7 @@ export default function TransactionDetailScreen({ route }) {
   };
 
   return (
-    <ScrollView 
+    <ScrollView
       contentContainerStyle={styles.container}
       showsVerticalScrollIndicator={false}
     >
@@ -128,7 +132,7 @@ export default function TransactionDetailScreen({ route }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors, typography) => StyleSheet.create({
   container: {
     flexGrow: 1,
     backgroundColor: colors.background.paper,

@@ -1,14 +1,18 @@
 import { View, Text, StyleSheet, ScrollView, Platform, Share, Alert } from "react-native";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { getProfile } from "../api/user";
 import QRCode from "react-native-qrcode-svg";
 import { Button, Card } from "react-native-paper";
-import { colors, spacing, typography } from "../theme";
+import { spacing } from "../theme";
 import { ActivityIndicator } from "react-native";
+import { useSettings } from "../context/SettingsContext";
 
 export default function QRCodeScreen() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const { colors, typography } = useSettings();
+  const styles = useMemo(() => createStyles(colors, typography), [colors, typography]);
 
   useEffect(() => {
     getProfile()
@@ -60,7 +64,7 @@ export default function QRCodeScreen() {
   }
 
   return (
-    <ScrollView 
+    <ScrollView
       contentContainerStyle={styles.container}
       showsVerticalScrollIndicator={false}
     >
@@ -77,8 +81,8 @@ export default function QRCodeScreen() {
         <View style={styles.qrCardContent}>
           {Platform.OS !== "web" ? (
             <View style={styles.qrWrapper}>
-              <QRCode 
-                value={String(user.member_code)} 
+              <QRCode
+                value={String(user.member_code)}
                 size={280}
                 color={colors.primary[700]}
                 backgroundColor={colors.background.default}
@@ -91,7 +95,7 @@ export default function QRCodeScreen() {
               </Text>
             </View>
           )}
-          
+
           <View style={styles.memberCodeContainer}>
             <Text style={styles.memberCodeLabel}>Member Code</Text>
             <Text style={styles.memberCode}>{user.member_code}</Text>
@@ -144,7 +148,7 @@ export default function QRCodeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors, typography) => StyleSheet.create({
   container: {
     flexGrow: 1,
     backgroundColor: colors.background.paper,

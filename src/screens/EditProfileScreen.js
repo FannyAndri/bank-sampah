@@ -1,8 +1,9 @@
 import { View, Text, StyleSheet, ScrollView, Alert, ActivityIndicator, Image, KeyboardAvoidingView, Platform } from "react-native";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { getProfile, updateProfile } from "../api/user";
 import { TextInput, Button, Card } from "react-native-paper";
-import { colors, spacing, typography } from "../theme";
+import { spacing } from "../theme";
+import { useSettings } from "../context/SettingsContext";
 
 export default function EditProfileScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
@@ -14,6 +15,9 @@ export default function EditProfileScreen({ navigation }) {
     phone_number: "",
     address: "",
   });
+
+  const { colors, typography } = useSettings();
+  const styles = useMemo(() => createStyles(colors, typography), [colors, typography]);
 
   useEffect(() => {
     loadProfile();
@@ -52,7 +56,7 @@ export default function EditProfileScreen({ navigation }) {
     setSaving(true);
     try {
       await updateProfile(formData);
-      
+
       Alert.alert(
         "Berhasil",
         "Profil berhasil diperbarui",
@@ -70,7 +74,7 @@ export default function EditProfileScreen({ navigation }) {
     } catch (err) {
       console.error("Update error:", err);
       const errorMessage = err?.response?.data?.message || "Gagal memperbarui profil";
-      
+
       // Handle validation errors
       if (err?.response?.data?.errors) {
         const errors = err.response.data.errors;
@@ -99,110 +103,114 @@ export default function EditProfileScreen({ navigation }) {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 20}
     >
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.avatarContainer}>
-          {user?.avatar_url ? (
-            <Image source={{ uri: user.avatar_url }} style={styles.avatar} />
-          ) : (
-            <View style={styles.avatarPlaceholder}>
-              <Text style={styles.avatarText}>
-                {formData.name?.charAt(0)?.toUpperCase() || "U"}
-              </Text>
-            </View>
-          )}
-        </View>
-        <Button
-          mode="text"
-          onPress={() => Alert.alert("Info", "Fitur upload foto akan segera tersedia")}
-          textColor={colors.primary[600]}
-          style={styles.changePhotoButton}
-        >
-          Ubah Foto
-        </Button>
-      </View>
-
-      {/* Form Card */}
-      <Card style={styles.formCard} mode="elevated" elevation={2}>
-        <View style={styles.formContent}>
-          <TextInput
-            label="Nama Lengkap"
-            value={formData.name}
-            onChangeText={(text) => setFormData({ ...formData, name: text })}
-            mode="outlined"
-            style={styles.input}
-            contentStyle={styles.inputContent}
-            outlineColor={colors.border.light}
-            activeOutlineColor={colors.primary[500]}
-            left={<TextInput.Icon icon="account" iconColor={colors.primary[500]} />}
-          />
-
-          <TextInput
-            label="Email"
-            value={formData.email}
-            onChangeText={(text) => setFormData({ ...formData, email: text })}
-            mode="outlined"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            style={styles.input}
-            contentStyle={styles.inputContent}
-            outlineColor={colors.border.light}
-            activeOutlineColor={colors.primary[500]}
-            left={<TextInput.Icon icon="email" iconColor={colors.primary[500]} />}
-          />
-
-          <TextInput
-            label="Nomor Telepon"
-            value={formData.phone_number}
-            onChangeText={(text) => setFormData({ ...formData, phone_number: text })}
-            mode="outlined"
-            keyboardType="phone-pad"
-            style={styles.input}
-            contentStyle={styles.inputContent}
-            outlineColor={colors.border.light}
-            activeOutlineColor={colors.primary[500]}
-            left={<TextInput.Icon icon="phone" iconColor={colors.primary[500]} />}
-          />
-
-          <TextInput
-            label="Alamat"
-            value={formData.address}
-            onChangeText={(text) => setFormData({ ...formData, address: text })}
-            mode="outlined"
-            multiline
-            numberOfLines={4}
-            style={styles.input}
-            contentStyle={styles.inputContent}
-            outlineColor={colors.border.light}
-            activeOutlineColor={colors.primary[500]}
-            left={<TextInput.Icon icon="map-marker" iconColor={colors.primary[500]} />}
-          />
-
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.avatarContainer}>
+            {user?.avatar_url ? (
+              <Image source={{ uri: user.avatar_url }} style={styles.avatar} />
+            ) : (
+              <View style={styles.avatarPlaceholder}>
+                <Text style={styles.avatarText}>
+                  {formData.name?.charAt(0)?.toUpperCase() || "U"}
+                </Text>
+              </View>
+            )}
+          </View>
           <Button
-            mode="contained"
-            onPress={handleSave}
-            loading={saving}
-            disabled={saving}
-            style={styles.saveButton}
-            contentStyle={styles.buttonContent}
-            buttonColor={colors.primary[500]}
-            textColor={colors.text.white}
+            mode="text"
+            onPress={() => Alert.alert("Info", "Fitur upload foto akan segera tersedia")}
+            textColor={colors.primary[600]}
+            style={styles.changePhotoButton}
           >
-            {saving ? "Menyimpan..." : "Simpan Perubahan"}
+            Ubah Foto
           </Button>
         </View>
-      </Card>
+
+        {/* Form Card */}
+        <Card style={styles.formCard} mode="elevated" elevation={2}>
+          <View style={styles.formContent}>
+            <TextInput
+              label="Nama Lengkap"
+              value={formData.name}
+              onChangeText={(text) => setFormData({ ...formData, name: text })}
+              mode="outlined"
+              style={styles.input}
+              contentStyle={styles.inputContent}
+              outlineColor={colors.border.light}
+              activeOutlineColor={colors.primary[500]}
+              left={<TextInput.Icon icon="account" iconColor={colors.primary[500]} />}
+              theme={{ colors: { background: colors.background.default, text: colors.text.primary } }}
+            />
+
+            <TextInput
+              label="Email"
+              value={formData.email}
+              onChangeText={(text) => setFormData({ ...formData, email: text })}
+              mode="outlined"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              style={styles.input}
+              contentStyle={styles.inputContent}
+              outlineColor={colors.border.light}
+              activeOutlineColor={colors.primary[500]}
+              left={<TextInput.Icon icon="email" iconColor={colors.primary[500]} />}
+              theme={{ colors: { background: colors.background.default, text: colors.text.primary } }}
+            />
+
+            <TextInput
+              label="Nomor Telepon"
+              value={formData.phone_number}
+              onChangeText={(text) => setFormData({ ...formData, phone_number: text })}
+              mode="outlined"
+              keyboardType="phone-pad"
+              style={styles.input}
+              contentStyle={styles.inputContent}
+              outlineColor={colors.border.light}
+              activeOutlineColor={colors.primary[500]}
+              left={<TextInput.Icon icon="phone" iconColor={colors.primary[500]} />}
+              theme={{ colors: { background: colors.background.default, text: colors.text.primary } }}
+            />
+
+            <TextInput
+              label="Alamat"
+              value={formData.address}
+              onChangeText={(text) => setFormData({ ...formData, address: text })}
+              mode="outlined"
+              multiline
+              numberOfLines={4}
+              style={styles.input}
+              contentStyle={styles.inputContent}
+              outlineColor={colors.border.light}
+              activeOutlineColor={colors.primary[500]}
+              left={<TextInput.Icon icon="map-marker" iconColor={colors.primary[500]} />}
+              theme={{ colors: { background: colors.background.default, text: colors.text.primary } }}
+            />
+
+            <Button
+              mode="contained"
+              onPress={handleSave}
+              loading={saving}
+              disabled={saving}
+              style={styles.saveButton}
+              contentStyle={styles.buttonContent}
+              buttonColor={colors.primary[500]}
+              textColor={colors.text.white}
+            >
+              {saving ? "Menyimpan..." : "Simpan Perubahan"}
+            </Button>
+          </View>
+        </Card>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors, typography) => StyleSheet.create({
   keyboardView: {
     flex: 1,
   },
@@ -273,6 +281,7 @@ const styles = StyleSheet.create({
   },
   inputContent: {
     fontSize: 16,
+    color: colors.text.primary,
   },
   saveButton: {
     marginTop: spacing.md,

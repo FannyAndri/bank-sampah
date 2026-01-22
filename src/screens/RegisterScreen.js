@@ -1,9 +1,11 @@
 import { View, Text, StyleSheet, ScrollView, Alert, KeyboardAvoidingView, Platform } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TextInput, Button } from "react-native-paper";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { registerApi } from "../api/auth";
 import { saveToken } from "../store/authStore";
-import { colors, spacing, typography } from "../theme";
+import { spacing } from "../theme";
+import { useSettings } from "../context/SettingsContext";
 
 export default function RegisterScreen({ navigation }) {
   const [name, setName] = useState("");
@@ -11,6 +13,11 @@ export default function RegisterScreen({ navigation }) {
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
+  const insets = useSafeAreaInsets();
+  const { colors, typography } = useSettings();
+  const styles = useMemo(() => createStyles(colors, typography, insets), [colors, typography, insets]);
 
   // Helper function to translate Laravel validation keys to user-friendly messages
   const translateValidationError = (key, field) => {
@@ -46,30 +53,50 @@ export default function RegisterScreen({ navigation }) {
   const register = async () => {
     // Client-side validation
     if (!name.trim()) {
-      Alert.alert("Error", "Nama wajib diisi");
+      Alert.alert(
+        "Nama Kosong",
+        "Silakan masukkan nama lengkap Anda terlebih dahulu.",
+        [{ text: "OK", style: "default" }]
+      );
       return;
     }
     if (!email.trim()) {
-      Alert.alert("Error", "Email wajib diisi");
+      Alert.alert(
+        "Email Kosong",
+        "Silakan masukkan email Anda terlebih dahulu.",
+        [{ text: "OK", style: "default" }]
+      );
       return;
     }
     if (!password) {
-      Alert.alert("Error", "Password wajib diisi");
+      Alert.alert(
+        "Password Kosong",
+        "Silakan masukkan password Anda terlebih dahulu.",
+        [{ text: "OK", style: "default" }]
+      );
       return;
     }
     if (password.length < 8) {
-      Alert.alert("Error", "Password minimal 8 karakter");
+      Alert.alert(
+        "Password Terlalu Pendek",
+        "Password harus minimal 8 karakter. Silakan gunakan password yang lebih panjang untuk keamanan akun Anda.",
+        [{ text: "OK", style: "default" }]
+      );
       return;
     }
     if (password !== passwordConfirm) {
-      Alert.alert("Error", "Password dan konfirmasi tidak sama");
+      Alert.alert(
+        "Password Tidak Cocok",
+        "Password dan konfirmasi password tidak sama. Silakan periksa kembali.",
+        [{ text: "OK", style: "default" }]
+      );
       return;
     }
 
     setLoading(true);
     try {
       const res = await registerApi(name, email, password, passwordConfirm);
-      await saveToken(res.data.token);
+      await saveToken(res.data.data.token);
       navigation.replace("MainTabs");
     } catch (err) {
       console.log("Register error:", err);
@@ -79,12 +106,12 @@ export default function RegisterScreen({ navigation }) {
       const status = err?.response?.status;
       const data = err?.response?.data;
 
-      let title = "Error";
-      let message = "Registrasi gagal. Silakan coba lagi.";
+      let title = "Registrasi Gagal";
+      let message = "Terjadi kesalahan saat mendaftar. Silakan coba lagi.";
 
       // Handle validation errors (422)
       if (status === 422 && data?.errors) {
-        title = "Validasi Error";
+        title = "Data Tidak Valid";
         const fieldNames = {
           name: "Nama",
           email: "Email",
@@ -103,13 +130,20 @@ export default function RegisterScreen({ navigation }) {
         });
 
         message = errorList.length > 0 ? errorList.join("\n") : data.message || message;
+      } else if (status === 409) {
+        title = "Email Sudah Terdaftar";
+        message = "Email yang Anda masukkan sudah terdaftar. Silakan gunakan email lain atau login dengan akun yang sudah ada.";
       } else if (data?.message) {
         message = data.message;
       } else if (err.message) {
         message = err.message;
       }
 
-      Alert.alert(title, message);
+      Alert.alert(
+        title,
+        message,
+        [{ text: "OK", style: "cancel" }]
+      );
     } finally {
       setLoading(false);
     }
@@ -121,111 +155,113 @@ export default function RegisterScreen({ navigation }) {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
     >
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.content}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.logoContainer}>
-            <View style={styles.logoCircle}>
-              <Text style={styles.logoText}>♻️</Text>
+          {/* Header */}
+          <View style={styles.header}>
+            <View style={styles.logoContainer}>
+              <View style={styles.logoCircle}>
+                <Text style={styles.logoText}>♻️</Text>
+              </View>
+            </View>
+            <Text style={styles.title}>Daftar Akun</Text>
+            <Text style={styles.subtitle}>
+              Bergabunglah dengan komunitas Bank Sampah Digital
+            </Text>
+          </View>
+
+          {/* Form */}
+          <View style={styles.form}>
+            <TextInput
+              label="Nama Lengkap"
+              value={name}
+              onChangeText={setName}
+              mode="outlined"
+              style={styles.input}
+              contentStyle={styles.inputContent}
+              outlineColor={colors.border.light}
+              activeOutlineColor={colors.primary[500]}
+              left={<TextInput.Icon icon="account" iconColor={colors.primary[500]} />}
+            />
+
+            <TextInput
+              label="Email"
+              value={email}
+              onChangeText={setEmail}
+              mode="outlined"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              style={styles.input}
+              contentStyle={styles.inputContent}
+              outlineColor={colors.border.light}
+              activeOutlineColor={colors.primary[500]}
+              left={<TextInput.Icon icon="email" iconColor={colors.primary[500]} />}
+            />
+
+            <TextInput
+              label="Password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+              mode="outlined"
+              style={styles.input}
+              contentStyle={styles.inputContent}
+              outlineColor={colors.border.light}
+              activeOutlineColor={colors.primary[500]}
+              left={<TextInput.Icon icon="lock" iconColor={colors.primary[500]} />}
+              right={<TextInput.Icon icon={showPassword ? "eye-off" : "eye"} onPress={() => setShowPassword(!showPassword)} />}
+            />
+
+            <TextInput
+              label="Konfirmasi Password"
+              value={passwordConfirm}
+              onChangeText={setPasswordConfirm}
+              secureTextEntry={!showPasswordConfirm}
+              mode="outlined"
+              style={styles.input}
+              contentStyle={styles.inputContent}
+              outlineColor={colors.border.light}
+              activeOutlineColor={colors.primary[500]}
+              left={<TextInput.Icon icon="lock-check" iconColor={colors.primary[500]} />}
+              right={<TextInput.Icon icon={showPasswordConfirm ? "eye-off" : "eye"} onPress={() => setShowPasswordConfirm(!showPasswordConfirm)} />}
+            />
+
+            <Button
+              mode="contained"
+              onPress={register}
+              style={styles.registerButton}
+              contentStyle={styles.buttonContent}
+              loading={loading}
+              disabled={loading}
+              buttonColor={colors.primary[500]}
+              textColor={colors.text.white}
+            >
+              {loading ? "Mendaftar..." : "Daftar"}
+            </Button>
+
+            <View style={styles.loginSection}>
+              <Text style={styles.loginText}>Sudah punya akun? </Text>
+              <Button
+                mode="text"
+                onPress={() => navigation.navigate("Login")}
+                textColor={colors.primary[600]}
+                labelStyle={styles.loginButtonLabel}
+              >
+                Masuk
+              </Button>
             </View>
           </View>
-          <Text style={styles.title}>Daftar Akun</Text>
-          <Text style={styles.subtitle}>
-            Bergabunglah dengan komunitas Bank Sampah Digital
-          </Text>
         </View>
-
-        {/* Form */}
-        <View style={styles.form}>
-          <TextInput
-            label="Nama Lengkap"
-            value={name}
-            onChangeText={setName}
-            mode="outlined"
-            style={styles.input}
-            contentStyle={styles.inputContent}
-            outlineColor={colors.border.light}
-            activeOutlineColor={colors.primary[500]}
-            left={<TextInput.Icon icon="account" iconColor={colors.primary[500]} />}
-          />
-
-          <TextInput
-            label="Email"
-            value={email}
-            onChangeText={setEmail}
-            mode="outlined"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            style={styles.input}
-            contentStyle={styles.inputContent}
-            outlineColor={colors.border.light}
-            activeOutlineColor={colors.primary[500]}
-            left={<TextInput.Icon icon="email" iconColor={colors.primary[500]} />}
-          />
-
-          <TextInput
-            label="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            mode="outlined"
-            style={styles.input}
-            contentStyle={styles.inputContent}
-            outlineColor={colors.border.light}
-            activeOutlineColor={colors.primary[500]}
-            left={<TextInput.Icon icon="lock" iconColor={colors.primary[500]} />}
-          />
-
-          <TextInput
-            label="Konfirmasi Password"
-            value={passwordConfirm}
-            onChangeText={setPasswordConfirm}
-            secureTextEntry
-            mode="outlined"
-            style={styles.input}
-            contentStyle={styles.inputContent}
-            outlineColor={colors.border.light}
-            activeOutlineColor={colors.primary[500]}
-            left={<TextInput.Icon icon="lock-check" iconColor={colors.primary[500]} />}
-          />
-
-          <Button
-            mode="contained"
-            onPress={register}
-            style={styles.registerButton}
-            contentStyle={styles.buttonContent}
-            loading={loading}
-            disabled={loading}
-            buttonColor={colors.primary[500]}
-            textColor={colors.text.white}
-          >
-            {loading ? "Mendaftar..." : "Daftar"}
-          </Button>
-
-          <View style={styles.loginSection}>
-            <Text style={styles.loginText}>Sudah punya akun? </Text>
-            <Button
-              mode="text"
-              onPress={() => navigation.navigate("Login")}
-              textColor={colors.primary[600]}
-              labelStyle={styles.loginButtonLabel}
-            >
-              Masuk
-            </Button>
-          </View>
-        </View>
-      </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors, typography, insets) => StyleSheet.create({
   keyboardView: {
     flex: 1,
   },
@@ -236,8 +272,8 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.xl,
+    paddingTop: insets.top + spacing.xl,
+    paddingBottom: insets.bottom + spacing.xl,
   },
   header: {
     alignItems: "center",

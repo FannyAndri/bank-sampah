@@ -1,22 +1,36 @@
 import { View, Text, StyleSheet, ScrollView, Image, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TextInput, Button } from "react-native-paper";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { loginApi } from "../api/auth";
 import { saveToken } from "../store/authStore";
-import { colors, spacing, typography } from "../theme";
+import { spacing } from "../theme";
+import { useSettings } from "../context/SettingsContext";
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const insets = useSafeAreaInsets();
+  const { colors, typography } = useSettings();
+  const styles = useMemo(() => createStyles(colors, typography, insets), [colors, typography, insets]);
 
   const login = async () => {
     if (!email.trim()) {
-      Alert.alert("Error", "Email wajib diisi");
+      Alert.alert(
+        "Email Kosong",
+        "Silakan masukkan email Anda terlebih dahulu.",
+        [{ text: "OK", style: "default" }]
+      );
       return;
     }
     if (!password) {
-      Alert.alert("Error", "Password wajib diisi");
+      Alert.alert(
+        "Password Kosong",
+        "Silakan masukkan password Anda terlebih dahulu.",
+        [{ text: "OK", style: "default" }]
+      );
       return;
     }
 
@@ -30,17 +44,29 @@ export default function LoginScreen({ navigation }) {
       const status = err?.response?.status;
       const data = err?.response?.data;
 
-      let message = "Login gagal. Silakan coba lagi.";
+      let title = "Login Gagal";
+      let message = "Terjadi kesalahan. Silakan coba lagi.";
 
-      if (status === 401 || status === 422) {
-        message = data?.message || "Email atau password salah";
+      if (status === 401) {
+        title = "Email atau Password Salah";
+        message = "Email atau password yang Anda masukkan tidak sesuai. Silakan periksa kembali dan coba lagi.";
+      } else if (status === 422) {
+        title = "Data Tidak Valid";
+        message = data?.message || "Email atau password yang Anda masukkan tidak valid. Silakan periksa kembali.";
+      } else if (status === 404) {
+        title = "Akun Tidak Ditemukan";
+        message = "Email yang Anda masukkan tidak terdaftar. Silakan daftar terlebih dahulu.";
       } else if (data?.message) {
         message = data.message;
       } else if (err.message) {
         message = err.message;
       }
 
-      Alert.alert("Error", message);
+      Alert.alert(
+        title,
+        message,
+        [{ text: "OK", style: "cancel" }]
+      );
     } finally {
       setLoading(false);
     }
@@ -52,86 +78,87 @@ export default function LoginScreen({ navigation }) {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
     >
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.content}>
-        {/* Logo/Header Section */}
-        <View style={styles.header}>
-          <View style={styles.logoContainer}>
-            <View style={styles.logoCircle}>
-              <Text style={styles.logoText}>♻️</Text>
+          {/* Logo/Header Section */}
+          <View style={styles.header}>
+            <View style={styles.logoContainer}>
+              <View style={styles.logoCircle}>
+                <Text style={styles.logoText}>♻️</Text>
+              </View>
+            </View>
+            <Text style={styles.title}>Bank Sampah Digital</Text>
+            <Text style={styles.subtitle}>
+              Kelola sampahmu, dapatkan manfaatnya
+            </Text>
+          </View>
+
+          {/* Form Section */}
+          <View style={styles.form}>
+            <TextInput
+              label="Email"
+              value={email}
+              onChangeText={setEmail}
+              mode="outlined"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              style={styles.input}
+              contentStyle={styles.inputContent}
+              outlineColor={colors.border.light}
+              activeOutlineColor={colors.primary[500]}
+              left={<TextInput.Icon icon="email" iconColor={colors.primary[500]} />}
+            />
+
+            <TextInput
+              label="Password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+              mode="outlined"
+              style={styles.input}
+              contentStyle={styles.inputContent}
+              outlineColor={colors.border.light}
+              activeOutlineColor={colors.primary[500]}
+              left={<TextInput.Icon icon="lock" iconColor={colors.primary[500]} />}
+              right={<TextInput.Icon icon={showPassword ? "eye-off" : "eye"} onPress={() => setShowPassword(!showPassword)} />}
+            />
+
+            <Button
+              mode="contained"
+              onPress={login}
+              style={styles.loginButton}
+              contentStyle={styles.buttonContent}
+              loading={loading}
+              disabled={loading}
+              buttonColor={colors.primary[500]}
+              textColor={colors.text.white}
+            >
+              {loading ? "Masuk..." : "Masuk"}
+            </Button>
+
+            <View style={styles.registerSection}>
+              <Text style={styles.registerText}>Belum punya akun? </Text>
+              <Button
+                mode="text"
+                onPress={() => navigation.navigate("Register")}
+                textColor={colors.primary[600]}
+                labelStyle={styles.registerButtonLabel}
+              >
+                Daftar Sekarang
+              </Button>
             </View>
           </View>
-          <Text style={styles.title}>Bank Sampah Digital</Text>
-          <Text style={styles.subtitle}>
-            Kelola sampahmu, dapatkan manfaatnya
-          </Text>
         </View>
-
-        {/* Form Section */}
-        <View style={styles.form}>
-          <TextInput
-            label="Email"
-            value={email}
-            onChangeText={setEmail}
-            mode="outlined"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            style={styles.input}
-            contentStyle={styles.inputContent}
-            outlineColor={colors.border.light}
-            activeOutlineColor={colors.primary[500]}
-            left={<TextInput.Icon icon="email" iconColor={colors.primary[500]} />}
-          />
-
-          <TextInput
-            label="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            mode="outlined"
-            style={styles.input}
-            contentStyle={styles.inputContent}
-            outlineColor={colors.border.light}
-            activeOutlineColor={colors.primary[500]}
-            left={<TextInput.Icon icon="lock" iconColor={colors.primary[500]} />}
-          />
-
-          <Button
-            mode="contained"
-            onPress={login}
-            style={styles.loginButton}
-            contentStyle={styles.buttonContent}
-            loading={loading}
-            disabled={loading}
-            buttonColor={colors.primary[500]}
-            textColor={colors.text.white}
-          >
-            {loading ? "Masuk..." : "Masuk"}
-          </Button>
-
-          <View style={styles.registerSection}>
-            <Text style={styles.registerText}>Belum punya akun? </Text>
-            <Button
-              mode="text"
-              onPress={() => navigation.navigate("Register")}
-              textColor={colors.primary[600]}
-              labelStyle={styles.registerButtonLabel}
-            >
-              Daftar Sekarang
-            </Button>
-          </View>
-        </View>
-      </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors, typography, insets) => StyleSheet.create({
   keyboardView: {
     flex: 1,
   },
@@ -142,8 +169,8 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xxl,
-    paddingBottom: spacing.xl,
+    paddingTop: insets.top + spacing.xl,
+    paddingBottom: insets.bottom + spacing.xl,
   },
   header: {
     alignItems: "center",

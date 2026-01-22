@@ -1,11 +1,16 @@
 import { View, Text, StyleSheet, ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
-import { useState } from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useState, useMemo } from "react";
 import { TextInput, Button, Card } from "react-native-paper";
-import { colors, spacing, typography } from "../theme";
+import { spacing } from "../theme";
+import { useSettings } from "../context/SettingsContext";
 
 export default function TukarSampahScreen({ navigation }) {
   const [memberCode, setMemberCode] = useState("");
   const [loading, setLoading] = useState(false);
+  const insets = useSafeAreaInsets();
+  const { colors, typography } = useSettings();
+  const styles = useMemo(() => createStyles(colors, typography, insets), [colors, typography, insets]);
 
   const handleScanQR = () => {
     Alert.alert(
@@ -34,104 +39,105 @@ export default function TukarSampahScreen({ navigation }) {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 20}
     >
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerIcon}>
-          <Text style={styles.headerIconText}>♻️</Text>
-        </View>
-        <Text style={styles.title}>Tukar Sampah</Text>
-        <Text style={styles.subtitle}>
-          Lakukan transaksi penukaran sampah dengan kasir
-        </Text>
-      </View>
-
-      {/* Instructions Card */}
-      <Card style={styles.instructionCard} mode="elevated" elevation={2}>
-        <View style={styles.instructionContent}>
-          <Text style={styles.instructionTitle}>📋 Cara Menggunakan</Text>
-          <Text style={styles.instructionText}>
-            1. Tunjukkan QR Code Member Anda ke kasir{'\n'}
-            2. Atau masukkan Member Code Anda{'\n'}
-            3. Kasir akan memproses transaksi sampah Anda{'\n'}
-            4. Saldo akan otomatis ditambahkan ke akun
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerIcon}>
+            <Text style={styles.headerIconText}>♻️</Text>
+          </View>
+          <Text style={styles.title}>Tukar Sampah</Text>
+          <Text style={styles.subtitle}>
+            Lakukan transaksi penukaran sampah dengan kasir
           </Text>
         </View>
-      </Card>
 
-      {/* QR Code Section */}
-      <Card style={styles.qrCard} mode="elevated" elevation={2}>
-        <View style={styles.qrCardContent}>
-          <Text style={styles.qrCardTitle}>QR Code Member</Text>
-          <Text style={styles.qrCardSubtitle}>
-            Tunjukkan QR code ini ke kasir untuk transaksi cepat
-          </Text>
-          <Button
-            mode="contained"
-            onPress={() => navigation.navigate("QRCode")}
-            style={styles.qrButton}
-            contentStyle={styles.qrButtonContent}
-            buttonColor={colors.primary[500]}
-            textColor={colors.text.white}
-            icon="qrcode"
-          >
-            Lihat QR Code
-          </Button>
-        </View>
-      </Card>
+        {/* Instructions Card */}
+        <Card style={styles.instructionCard} mode="elevated" elevation={2}>
+          <View style={styles.instructionContent}>
+            <Text style={styles.instructionTitle}>📋 Cara Menggunakan</Text>
+            <Text style={styles.instructionText}>
+              1. Tunjukkan QR Code Member Anda ke kasir{'\n'}
+              2. Atau masukkan Member Code Anda{'\n'}
+              3. Kasir akan memproses transaksi sampah Anda{'\n'}
+              4. Saldo akan otomatis ditambahkan ke akun
+            </Text>
+          </View>
+        </Card>
 
-      {/* Manual Input Section */}
-      <Card style={styles.inputCard} mode="elevated" elevation={2}>
-        <View style={styles.inputCardContent}>
-          <Text style={styles.inputCardTitle}>Atau Masukkan Manual</Text>
-          <TextInput
-            label="Member Code"
-            value={memberCode}
-            onChangeText={setMemberCode}
-            mode="outlined"
-            placeholder="Masukkan Member Code"
-            style={styles.input}
-            contentStyle={styles.inputContent}
-            outlineColor={colors.border.light}
-            activeOutlineColor={colors.primary[500]}
-            left={<TextInput.Icon icon="account" iconColor={colors.primary[500]} />}
-          />
-          <Button
-            mode="contained"
-            onPress={handleSubmit}
-            loading={loading}
-            disabled={loading || !memberCode.trim()}
-            style={styles.submitButton}
-            contentStyle={styles.buttonContent}
-            buttonColor={colors.primary[500]}
-            textColor={colors.text.white}
-          >
-            {loading ? "Memproses..." : "Lanjutkan"}
-          </Button>
-        </View>
-      </Card>
+        {/* QR Code Section */}
+        <Card style={styles.qrCard} mode="elevated" elevation={2}>
+          <View style={styles.qrCardContent}>
+            <Text style={styles.qrCardTitle}>QR Code Member</Text>
+            <Text style={styles.qrCardSubtitle}>
+              Tunjukkan QR code ini ke kasir untuk transaksi cepat
+            </Text>
+            <Button
+              mode="contained"
+              onPress={() => navigation.navigate("QRCode")}
+              style={styles.qrButton}
+              contentStyle={styles.qrButtonContent}
+              buttonColor={colors.primary[500]}
+              textColor={colors.text.white}
+              icon="qrcode"
+            >
+              Lihat QR Code
+            </Button>
+          </View>
+        </Card>
 
-      {/* Info Section */}
-      <Card style={styles.infoCard} mode="elevated" elevation={1}>
-        <View style={styles.infoCardContent}>
-          <Text style={styles.infoCardTitle}>ℹ️ Informasi</Text>
-          <Text style={styles.infoCardText}>
-            • Transaksi harus dilakukan di lokasi Bank Sampah{'\n'}
-            • Pastikan Member Code Anda sudah terdaftar{'\n'}
-            • Saldo akan langsung masuk setelah transaksi selesai
-          </Text>
-        </View>
-      </Card>
+        {/* Manual Input Section */}
+        <Card style={styles.inputCard} mode="elevated" elevation={2}>
+          <View style={styles.inputCardContent}>
+            <Text style={styles.inputCardTitle}>Atau Masukkan Manual</Text>
+            <TextInput
+              label="Member Code"
+              value={memberCode}
+              onChangeText={setMemberCode}
+              mode="outlined"
+              placeholder="Masukkan Member Code"
+              style={styles.input}
+              contentStyle={styles.inputContent}
+              outlineColor={colors.border.light}
+              activeOutlineColor={colors.primary[500]}
+              left={<TextInput.Icon icon="account" iconColor={colors.primary[500]} />}
+              theme={{ colors: { background: colors.background.default, text: colors.text.primary } }}
+            />
+            <Button
+              mode="contained"
+              onPress={handleSubmit}
+              loading={loading}
+              disabled={loading || !memberCode.trim()}
+              style={styles.submitButton}
+              contentStyle={styles.buttonContent}
+              buttonColor={colors.primary[500]}
+              textColor={colors.text.white}
+            >
+              {loading ? "Memproses..." : "Lanjutkan"}
+            </Button>
+          </View>
+        </Card>
+
+        {/* Info Section */}
+        <Card style={styles.infoCard} mode="elevated" elevation={1}>
+          <View style={styles.infoCardContent}>
+            <Text style={styles.infoCardTitle}>ℹ️ Informasi</Text>
+            <Text style={styles.infoCardText}>
+              • Transaksi harus dilakukan di lokasi Bank Sampah{'\n'}
+              • Pastikan Member Code Anda sudah terdaftar{'\n'}
+              • Saldo akan langsung masuk setelah transaksi selesai
+            </Text>
+          </View>
+        </Card>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors, typography, insets) => StyleSheet.create({
   keyboardView: {
     flex: 1,
   },
@@ -142,7 +148,7 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: "center",
-    paddingTop: spacing.xl,
+    paddingTop: insets.top + spacing.sm,
     paddingBottom: spacing.lg,
     paddingHorizontal: spacing.lg,
     backgroundColor: colors.primary[500],
@@ -177,7 +183,7 @@ const styles = StyleSheet.create({
     marginHorizontal: spacing.lg,
     marginTop: -spacing.lg,
     borderRadius: 16,
-    backgroundColor: colors.secondary[50],
+    backgroundColor: colors.secondary[50], // Check if this exists in palette or needs fallback
     marginBottom: spacing.lg,
   },
   instructionContent: {
@@ -245,6 +251,7 @@ const styles = StyleSheet.create({
   },
   inputContent: {
     fontSize: 16,
+    color: colors.text.primary,
   },
   submitButton: {
     borderRadius: 12,

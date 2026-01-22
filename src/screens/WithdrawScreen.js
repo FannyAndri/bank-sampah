@@ -1,12 +1,16 @@
 import { View, Text, StyleSheet, ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
 import { TextInput, Button, Card } from "react-native-paper";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { withdraw } from "../api/user";
-import { colors, spacing, typography } from "../theme";
+import { spacing } from "../theme";
+import { useSettings } from "../context/SettingsContext";
 
 export default function WithdrawScreen() {
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const { colors, typography } = useSettings();
+  const styles = useMemo(() => createStyles(colors, typography), [colors, typography]);
 
   const submit = async () => {
     if (!amount) {
@@ -65,90 +69,91 @@ export default function WithdrawScreen() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 20}
     >
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerIcon}>
-          <Text style={styles.headerIconText}>💸</Text>
-        </View>
-        <Text style={styles.title}>Tarik Saldo</Text>
-        <Text style={styles.subtitle}>
-          Masukkan jumlah saldo yang ingin ditarik
-        </Text>
-      </View>
-
-      {/* Form Card */}
-      <Card style={styles.card} mode="elevated" elevation={2}>
-        <View style={styles.cardContent}>
-          <View style={styles.inputSection}>
-            <Text style={styles.inputLabel}>Jumlah Penarikan</Text>
-            <View style={styles.inputContainer}>
-              <Text style={styles.currencyPrefix}>Rp</Text>
-              <TextInput
-                value={amount ? formatCurrency(amount) : ""}
-                onChangeText={handleAmountChange}
-                keyboardType="numeric"
-                mode="outlined"
-                placeholder="0"
-                style={styles.input}
-                contentStyle={styles.inputContent}
-                outlineColor={colors.border.light}
-                activeOutlineColor={colors.primary[500]}
-                left={<TextInput.Icon icon="cash" iconColor={colors.primary[500]} />}
-              />
-            </View>
-            <Text style={styles.inputHint}>
-              Minimal penarikan: Rp 10.000
-            </Text>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerIcon}>
+            <Text style={styles.headerIconText}>💸</Text>
           </View>
-
-          <View style={styles.infoBox}>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Biaya Admin</Text>
-              <Text style={styles.infoValue}>Gratis</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Waktu Proses</Text>
-              <Text style={styles.infoValue}>1-3 Hari Kerja</Text>
-            </View>
-          </View>
-
-          <Button
-            mode="contained"
-            onPress={submit}
-            loading={loading}
-            disabled={loading || !amount}
-            style={styles.submitButton}
-            contentStyle={styles.buttonContent}
-            buttonColor={colors.primary[500]}
-            textColor={colors.text.white}
-          >
-            {loading ? "Mengajukan..." : "Ajukan Penarikan"}
-          </Button>
-        </View>
-      </Card>
-
-      {/* Info Section */}
-      <Card style={styles.infoCard} mode="elevated" elevation={1}>
-        <View style={styles.infoCardContent}>
-          <Text style={styles.infoCardTitle}>ℹ️ Informasi</Text>
-          <Text style={styles.infoCardText}>
-            • Penarikan akan diproses dalam 1-3 hari kerja{'\n'}
-            • Saldo akan ditransfer ke rekening yang terdaftar{'\n'}
-            • Pastikan data rekening Anda sudah lengkap
+          <Text style={styles.title}>Tarik Saldo</Text>
+          <Text style={styles.subtitle}>
+            Masukkan jumlah saldo yang ingin ditarik
           </Text>
         </View>
-      </Card>
+
+        {/* Form Card */}
+        <Card style={styles.card} mode="elevated" elevation={2}>
+          <View style={styles.cardContent}>
+            <View style={styles.inputSection}>
+              <Text style={styles.inputLabel}>Jumlah Penarikan</Text>
+              <View style={styles.inputContainer}>
+                <Text style={styles.currencyPrefix}>Rp</Text>
+                <TextInput
+                  value={amount ? formatCurrency(amount) : ""}
+                  onChangeText={handleAmountChange}
+                  keyboardType="numeric"
+                  mode="outlined"
+                  placeholder="0"
+                  style={styles.input}
+                  contentStyle={styles.inputContent}
+                  outlineColor={colors.border.light}
+                  activeOutlineColor={colors.primary[500]}
+                  left={<TextInput.Icon icon="cash" iconColor={colors.primary[500]} />}
+                  theme={{ colors: { background: colors.background.default, text: colors.text.primary, placeholder: colors.text.secondary } }}
+                />
+              </View>
+              <Text style={styles.inputHint}>
+                Minimal penarikan: Rp 10.000
+              </Text>
+            </View>
+
+            <View style={styles.infoBox}>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Biaya Admin</Text>
+                <Text style={styles.infoValue}>Gratis</Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Waktu Proses</Text>
+                <Text style={styles.infoValue}>1-3 Hari Kerja</Text>
+              </View>
+            </View>
+
+            <Button
+              mode="contained"
+              onPress={submit}
+              loading={loading}
+              disabled={loading || !amount}
+              style={styles.submitButton}
+              contentStyle={styles.buttonContent}
+              buttonColor={colors.primary[500]}
+              textColor={colors.text.white}
+            >
+              {loading ? "Mengajukan..." : "Ajukan Penarikan"}
+            </Button>
+          </View>
+        </Card>
+
+        {/* Info Section */}
+        <Card style={styles.infoCard} mode="elevated" elevation={1}>
+          <View style={styles.infoCardContent}>
+            <Text style={styles.infoCardTitle}>ℹ️ Informasi</Text>
+            <Text style={styles.infoCardText}>
+              • Penarikan akan diproses dalam 1-3 hari kerja{'\n'}
+              • Saldo akan ditransfer ke rekening yang terdaftar{'\n'}
+              • Pastikan data rekening Anda sudah lengkap
+            </Text>
+          </View>
+        </Card>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors, typography) => StyleSheet.create({
   keyboardView: {
     flex: 1,
   },

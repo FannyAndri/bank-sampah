@@ -1,10 +1,12 @@
 import { View, Text, Image, StyleSheet, ScrollView, Alert, ActivityIndicator } from "react-native";
-import { useEffect, useState } from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useEffect, useState, useMemo } from "react";
 import { getProfile } from "../api/user";
 import { logoutApi } from "../api/auth";
 import { removeToken } from "../store/authStore";
 import { Card, Button } from "react-native-paper";
-import { colors, spacing, typography } from "../theme";
+import { spacing } from "../theme";
+import { useSettings } from "../context/SettingsContext";
 import { navigationRef } from "../navigation/AppNavigator";
 import { CommonActions } from "@react-navigation/native";
 
@@ -13,6 +15,9 @@ export default function ProfileScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const insets = useSafeAreaInsets();
+  const { colors, typography } = useSettings();
+  const styles = useMemo(() => createStyles(colors, typography, insets), [colors, typography, insets]);
 
   useEffect(() => {
     getProfile()
@@ -30,7 +35,7 @@ export default function ProfileScreen({ navigation }) {
 
   const handleLogout = async () => {
     if (isLoggingOut) return;
-    
+
     Alert.alert(
       "Logout",
       "Apakah Anda yakin ingin keluar?",
@@ -44,16 +49,16 @@ export default function ProfileScreen({ navigation }) {
           style: "destructive",
           onPress: async () => {
             setIsLoggingOut(true);
-            
+
             try {
               await logoutApi();
             } catch (e) {
               console.warn("Logout API failed, clearing token locally anyway", e);
             }
-            
+
             await removeToken();
             setIsLoggingOut(false);
-            
+
             // Navigate to Login using navigationRef
             if (navigationRef.current) {
               navigationRef.current.dispatch(
@@ -102,7 +107,7 @@ export default function ProfileScreen({ navigation }) {
   };
 
   return (
-    <ScrollView 
+    <ScrollView
       contentContainerStyle={styles.container}
       showsVerticalScrollIndicator={false}
     >
@@ -168,6 +173,17 @@ export default function ProfileScreen({ navigation }) {
         </Button>
 
         <Button
+          mode="outlined"
+          style={styles.settingsButton}
+          contentStyle={styles.buttonContent}
+          onPress={() => navigation.navigate("Settings")}
+          textColor={colors.primary[600]}
+          borderColor={colors.primary[300]}
+        >
+          ⚙️ Pengaturan
+        </Button>
+
+        <Button
           mode="contained"
           style={styles.logoutButton}
           contentStyle={styles.buttonContent}
@@ -184,7 +200,7 @@ export default function ProfileScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors, typography, insets) => StyleSheet.create({
   container: {
     flexGrow: 1,
     backgroundColor: colors.background.paper,
@@ -208,7 +224,8 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: "center",
-    paddingVertical: spacing.xl,
+    paddingTop: insets.top + spacing.sm,
+    paddingBottom: spacing.xl,
     backgroundColor: colors.primary[500],
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
@@ -297,6 +314,10 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   editButton: {
+    borderRadius: 12,
+    borderWidth: 1.5,
+  },
+  settingsButton: {
     borderRadius: 12,
     borderWidth: 1.5,
   },

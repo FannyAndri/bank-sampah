@@ -1,13 +1,19 @@
 import { FlatList, View, Text, StyleSheet, ActivityIndicator } from "react-native";
-import { useEffect, useState } from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useEffect, useState, useMemo } from "react";
 import { getTransactions } from "../api/user";
 import TransactionCard from "../components/TransactionCard";
-import { colors, spacing, typography } from "../theme";
+import { spacing } from "../theme";
+import { useSettings } from "../context/SettingsContext";
 
 export default function TransactionsScreen({ navigation }) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const insets = useSafeAreaInsets();
+  const { colors, typography } = useSettings();
+  const styles = useMemo(() => createStyles(colors, typography, insets), [colors, typography, insets]);
 
   useEffect(() => {
     getTransactions()
@@ -78,7 +84,7 @@ export default function TransactionsScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors, typography, insets) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background.paper,
@@ -101,7 +107,7 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: colors.primary[500],
-    paddingTop: spacing.xl,
+    paddingTop: insets.top + spacing.sm,
     paddingBottom: spacing.lg,
     paddingHorizontal: spacing.lg,
     borderBottomLeftRadius: 24,

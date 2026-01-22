@@ -1,44 +1,50 @@
 import { View, Text, StyleSheet, ScrollView, Dimensions, Image } from "react-native";
-import { useState, useRef } from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useState, useRef, useMemo } from "react";
 import { Button } from "react-native-paper";
-import { colors, spacing, typography } from "../theme";
+import { spacing } from "../theme";
+import { useSettings } from "../context/SettingsContext";
 
 const { width } = Dimensions.get("window");
-
-const onboardingData = [
-  {
-    id: 1,
-    title: "Selamat Datang di\nBank Sampah Digital",
-    description: "Kelola sampah Anda dengan mudah dan dapatkan manfaatnya",
-    image: "🌱",
-    color: colors.primary[500],
-  },
-  {
-    id: 2,
-    title: "Daur Ulang untuk\nMasa Depan Lebih Baik",
-    description: "Setiap sampah yang Anda daur ulang membantu menjaga lingkungan dan mengurangi polusi",
-    image: "♻️",
-    color: colors.secondary[500],
-  },
-  {
-    id: 3,
-    title: "Dapatkan Manfaat\nDari Sampah Anda",
-    description: "Tukar sampah Anda menjadi saldo yang bisa ditarik kapan saja",
-    image: "💰",
-    color: colors.primary[600],
-  },
-  {
-    id: 4,
-    title: "Mudah dan Praktis",
-    description: "Transaksi cepat dengan QR Code, pantau saldo dan riwayat transaksi dengan mudah",
-    image: "📱",
-    color: colors.secondary[600],
-  },
-];
 
 export default function OnboardingScreen({ onComplete }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollViewRef = useRef(null);
+
+  const insets = useSafeAreaInsets();
+  const { colors, typography } = useSettings();
+  const styles = useMemo(() => createStyles(colors, typography, insets), [colors, typography, insets]);
+
+  const onboardingData = useMemo(() => [
+    {
+      id: 1,
+      title: "Selamat Datang di\nBank Sampah Digital",
+      description: "Kelola sampah Anda dengan mudah dan dapatkan manfaatnya",
+      image: "🌱",
+      color: colors.primary[500],
+    },
+    {
+      id: 2,
+      title: "Daur Ulang untuk\nMasa Depan Lebih Baik",
+      description: "Setiap sampah yang Anda daur ulang membantu menjaga lingkungan dan mengurangi polusi",
+      image: "♻️",
+      color: colors.secondary[500],
+    },
+    {
+      id: 3,
+      title: "Dapatkan Manfaat\nDari Sampah Anda",
+      description: "Tukar sampah Anda menjadi saldo yang bisa ditarik kapan saja",
+      image: "💰",
+      color: colors.primary[600],
+    },
+    {
+      id: 4,
+      title: "Mudah dan Praktis",
+      description: "Transaksi cepat dengan QR Code, pantau saldo dan riwayat transaksi dengan mudah",
+      image: "📱",
+      color: colors.secondary[600],
+    },
+  ], [colors]);
 
   const handleNext = () => {
     if (currentIndex < onboardingData.length - 1) {
@@ -141,7 +147,7 @@ export default function OnboardingScreen({ onComplete }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors, typography, insets) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background.default,
@@ -209,7 +215,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xl,
+    paddingBottom: insets.bottom > 0 ? insets.bottom : spacing.xl,
     gap: spacing.md,
   },
   skipButton: {

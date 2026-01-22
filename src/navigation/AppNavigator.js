@@ -6,7 +6,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Icon } from "react-native-paper";
 import { getToken } from "../store/authStore";
 import { hasSeenOnboarding, setOnboardingSeen } from "../store/onboardingStore";
-import { colors } from "../theme";
+// import { colors } from "../theme"; // Removed unused import
+import { useSettings } from "../context/SettingsContext";
 
 // Auth Screens
 import OnboardingScreen from "../screens/OnboardingScreen";
@@ -24,6 +25,7 @@ import TransactionDetailScreen from "../screens/TransactionDetailScreen";
 import EditProfileScreen from "../screens/EditProfileScreen";
 import QRCodeScreen from "../screens/QRCodeScreen";
 import WithdrawScreen from "../screens/WithdrawScreen";
+import SettingsScreen from "../screens/SettingsScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -33,7 +35,8 @@ export const navigationRef = { current: null };
 // Tab Navigator untuk main screens
 function MainTabs() {
   const insets = useSafeAreaInsets();
-  
+  const { colors } = useSettings();
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -44,14 +47,14 @@ function MainTabs() {
           backgroundColor: colors.background.default,
           borderTopWidth: 1,
           borderTopColor: colors.border.light,
-          height: Platform.OS === "ios" ? 60 + insets.bottom : 60,
-          paddingBottom: Platform.OS === "ios" ? insets.bottom : 8,
-          paddingTop: 8,
-          elevation: 8,
+          height: Platform.OS === "ios" ? 65 + insets.bottom : 70 + (insets.bottom > 0 ? insets.bottom : 0),
+          paddingBottom: insets.bottom > 0 ? insets.bottom : (Platform.OS === "ios" ? 0 : 12),
+          paddingTop: 12,
+          elevation: 20,
           shadowColor: colors.gray[900],
-          shadowOffset: { width: 0, height: -2 },
+          shadowOffset: { width: 0, height: -4 },
           shadowOpacity: 0.1,
-          shadowRadius: 4,
+          shadowRadius: 10,
         },
         tabBarLabelStyle: {
           fontSize: 11,
@@ -110,6 +113,7 @@ function MainTabs() {
 export default function AppNavigator() {
   const [initialRoute, setInitialRoute] = useState(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const { colors } = useSettings();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -160,7 +164,7 @@ export default function AppNavigator() {
   }
 
   return (
-    <Stack.Navigator 
+    <Stack.Navigator
       initialRouteName={initialRoute}
       screenOptions={{
         headerStyle: {
@@ -173,28 +177,28 @@ export default function AppNavigator() {
       }}
     >
       {/* Onboarding */}
-      <Stack.Screen 
-        name="Onboarding" 
+      <Stack.Screen
+        name="Onboarding"
         options={{ headerShown: false }}
       >
         {() => <OnboardingScreen onComplete={handleOnboardingComplete} />}
       </Stack.Screen>
 
       {/* Auth Stack */}
-      <Stack.Screen 
-        name="Login" 
+      <Stack.Screen
+        name="Login"
         component={LoginScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen 
-        name="Register" 
+      <Stack.Screen
+        name="Register"
         component={RegisterScreen}
         options={{ headerShown: false }}
       />
 
       {/* Main Tabs */}
-      <Stack.Screen 
-        name="MainTabs" 
+      <Stack.Screen
+        name="MainTabs"
         component={MainTabs}
         options={{ headerShown: false }}
       />
@@ -229,6 +233,14 @@ export default function AppNavigator() {
         component={WithdrawScreen}
         options={{
           title: "Tarik Saldo",
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{
+          title: "Pengaturan",
           headerShown: true,
         }}
       />

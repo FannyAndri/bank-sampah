@@ -1,12 +1,17 @@
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { colors, spacing, typography } from "../theme";
+import { spacing } from "../theme";
+import { useSettings } from "../context/SettingsContext";
+import { useMemo } from "react";
 
 export default function TransactionCard({ data, onPress }) {
+  const { colors, typography } = useSettings();
+  const styles = useMemo(() => createStyles(colors, typography), [colors, typography]);
+
   if (!data) return null;
 
   const code = data.transaction_code || "-";
   const total = Number(data.total_amount || 0).toLocaleString("id-ID");
-  
+
   // Format date
   const formatDate = (dateString) => {
     if (!dateString) return "";
@@ -48,7 +53,7 @@ export default function TransactionCard({ data, onPress }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors, typography) => StyleSheet.create({
   card: {
     backgroundColor: colors.background.default,
     marginHorizontal: spacing.lg,

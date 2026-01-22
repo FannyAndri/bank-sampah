@@ -1,15 +1,20 @@
 import { View, Text, StyleSheet, ScrollView, Platform, ActivityIndicator, TouchableOpacity, Image, RefreshControl } from "react-native";
-import { useEffect, useState } from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useEffect, useState, useMemo } from "react";
 import { getProfile } from "../api/user";
 import QRCode from "react-native-qrcode-svg";
 import { Button, Card } from "react-native-paper";
-import { colors, spacing, typography } from "../theme";
+import { spacing } from "../theme";
+import { useSettings } from "../context/SettingsContext";
 
 export default function DashboardScreen({ navigation }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
+  const insets = useSafeAreaInsets();
+  const { colors, typography } = useSettings();
+  const styles = useMemo(() => createStyles(colors, typography, insets), [colors, typography, insets]);
 
   const loadProfile = async () => {
     try {
@@ -76,7 +81,7 @@ export default function DashboardScreen({ navigation }) {
   };
 
   return (
-    <ScrollView 
+    <ScrollView
       contentContainerStyle={styles.container}
       showsVerticalScrollIndicator={false}
       refreshControl={
@@ -90,7 +95,7 @@ export default function DashboardScreen({ navigation }) {
             <Text style={styles.greeting}>Selamat Datang,</Text>
             <Text style={styles.name}>{user.name || "Pengguna"}</Text>
           </View>
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={() => navigation.navigate("Profile")}
             style={styles.avatarButton}
           >
@@ -185,9 +190,9 @@ export default function DashboardScreen({ navigation }) {
 
       {/* QR Code Card */}
       {user.member_code && (
-        <Card 
-          style={styles.qrCard} 
-          mode="elevated" 
+        <Card
+          style={styles.qrCard}
+          mode="elevated"
           elevation={2}
           onPress={() => navigation.navigate("QRCode")}
         >
@@ -203,8 +208,8 @@ export default function DashboardScreen({ navigation }) {
           <View style={styles.qrContainer}>
             {Platform.OS !== "web" ? (
               <View style={styles.qrWrapper}>
-                <QRCode 
-                  value={String(user.member_code)} 
+                <QRCode
+                  value={String(user.member_code)}
                   size={160}
                   color={colors.primary[700]}
                   backgroundColor={colors.background.default}
@@ -229,7 +234,7 @@ export default function DashboardScreen({ navigation }) {
       <View style={styles.actionsSection}>
         <Text style={styles.sectionTitle}>Layanan Cepat</Text>
         <View style={styles.actionsGrid}>
-          <Card 
+          <Card
             style={styles.actionCard}
             mode="elevated"
             elevation={2}
@@ -244,7 +249,7 @@ export default function DashboardScreen({ navigation }) {
             </View>
           </Card>
 
-          <Card 
+          <Card
             style={styles.actionCard}
             mode="elevated"
             elevation={2}
@@ -259,7 +264,7 @@ export default function DashboardScreen({ navigation }) {
             </View>
           </Card>
 
-          <Card 
+          <Card
             style={styles.actionCard}
             mode="elevated"
             elevation={2}
@@ -274,7 +279,7 @@ export default function DashboardScreen({ navigation }) {
             </View>
           </Card>
 
-          <Card 
+          <Card
             style={styles.actionCard}
             mode="elevated"
             elevation={2}
@@ -307,7 +312,7 @@ export default function DashboardScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors, typography, insets) => StyleSheet.create({
   container: {
     flexGrow: 1,
     backgroundColor: colors.background.paper,
@@ -331,7 +336,7 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: colors.primary[500],
-    paddingTop: spacing.xl,
+    paddingTop: insets.top + spacing.sm,
     paddingBottom: spacing.lg,
     paddingHorizontal: spacing.lg,
     borderBottomLeftRadius: 24,
