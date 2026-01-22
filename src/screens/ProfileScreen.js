@@ -1,19 +1,79 @@
-import { View, Text, Image, StyleSheet, ScrollView } from "react-native";
+import { View, Text, Image, StyleSheet, ScrollView, Alert } from "react-native";
 import { useEffect, useState } from "react";
 import { getProfile } from "../api/user";
+import { logoutApi } from "../api/auth";
+import { removeToken } from "../store/authStore";
 import { Card, Button } from "react-native-paper";
 
 export default function ProfileScreen() {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
-    getProfile().then((res) => setUser(res.data?.data ?? res.data));
+    getProfile()
+      .then((res) => {
+        const userData = res.data?.data ?? res.data;
+        setUser(userData);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("❌ Profile API Error:", err);
+        setError(err?.response?.data?.message || "Gagal memuat profil");
+        setLoading(false);
+      });
   }, []);
+
+  const handleLogout = async () => {
+    // Prevent multiple calls
+    if (isLoggingOut) return;
+    
+    setIsLoggingOut(true);
+    
+    try {
+      // Try to logout via API first (while token still exists)
+      await logoutApi();
+    } catch (e) {
+      // If API fails (e.g., token already invalid, network error, or HTML response),
+      // we'll still clear token locally
+      console.warn("Logout API failed, clearing token locally anyway", e);
+    }
+    
+    // Always remove token locally, regardless of API response
+    await removeToken();
+    setIsLoggingOut(false);
+    
+    Alert.alert("Logout", "Anda telah keluar", [
+      {
+        text: "OK",
+        onPress: () => {
+          // AppNavigator will automatically redirect to Login when token is null
+        },
+      },
+    ]);
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <Text>Memuat profil...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.center}>
+        <Text style={{ color: "red" }}>{error}</Text>
+      </View>
+    );
+  }
 
   if (!user) {
     return (
       <View style={styles.center}>
-        <Text>Memuat profil...</Text>
+        <Text>Data pengguna tidak ditemukan</Text>
       </View>
     );
   }
@@ -50,6 +110,16 @@ export default function ProfileScreen() {
         onPress={() => alert("Edit profil belum tersedia")}
       >
         Edit Profil
+      </Button>
+
+      <Button
+        mode="contained"
+        style={[styles.button, { marginTop: 12, backgroundColor: "#E53935" }]}
+        onPress={handleLogout}
+        disabled={isLoggingOut}
+        loading={isLoggingOut}
+      >
+        {isLoggingOut ? "Keluar..." : "Logout"}
       </Button>
     </ScrollView>
   );

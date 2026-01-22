@@ -6,15 +6,46 @@ import { Button, Card } from "react-native-paper";
 
 export default function DashboardScreen({ navigation }) {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    getProfile().then((res) => setUser(res.data?.data ?? res.data));
+    getProfile()
+      .then((res) => {
+        console.log("📦 Profile API Response:", JSON.stringify(res.data, null, 2));
+        const userData = res.data?.data ?? res.data;
+        console.log("👤 Extracted user data:", JSON.stringify(userData, null, 2));
+        setUser(userData);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("❌ Profile API Error:", err);
+        console.error("Response:", err?.response?.data);
+        setError(err?.response?.data?.message || "Gagal memuat profil");
+        setLoading(false);
+      });
   }, []);
+
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <Text>Memuat dashboard...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.center}>
+        <Text style={{ color: "red" }}>{error}</Text>
+      </View>
+    );
+  }
 
   if (!user) {
     return (
       <View style={styles.center}>
-        <Text>Memuat dashboard...</Text>
+        <Text>Data pengguna tidak ditemukan</Text>
       </View>
     );
   }
@@ -34,12 +65,14 @@ export default function DashboardScreen({ navigation }) {
       {/* QR Code Card */}
       <Card style={styles.qrCard}>
         <Text style={styles.qrTitle}>QR Member</Text>
-        {Platform.OS !== "web" ? (
-          <QRCode value={String(user.member_code ?? "")} size={160} />
-        ) : (
+        {Platform.OS !== "web" && user.member_code ? (
+          <QRCode value={String(user.member_code)} size={160} />
+        ) : Platform.OS === "web" ? (
           <Text style={{ margin: 20 }}>QR Code hanya tersedia di aplikasi mobile</Text>
+        ) : (
+          <Text style={{ margin: 20, color: "#999" }}>Member code tidak tersedia</Text>
         )}
-        <Text style={styles.memberCode}>{user.member_code}</Text>
+        <Text style={styles.memberCode}>{user.member_code || "Tidak tersedia"}</Text>
       </Card>
 
       {/* Menu */}

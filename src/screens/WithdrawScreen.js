@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Alert } from "react-native";
 import { TextInput, Button, Card } from "react-native-paper";
 import { useState } from "react";
 import { withdraw } from "../api/user";
@@ -13,12 +13,34 @@ export default function WithdrawScreen() {
       return;
     }
 
-    setLoading(true);
-    await withdraw(amount);
-    setLoading(false);
+    const numericAmount = Number(amount);
+    if (Number.isNaN(numericAmount) || numericAmount <= 0) {
+      Alert.alert("Error", "Jumlah penarikan harus lebih dari 0");
+      return;
+    }
 
-    alert("Permintaan penarikan berhasil dikirim");
-    setAmount("");
+    try {
+      setLoading(true);
+      const res = await withdraw(numericAmount);
+      const message =
+        res?.data?.message || "Permintaan penarikan berhasil dikirim";
+
+      Alert.alert("Berhasil", message);
+      setAmount("");
+    } catch (err) {
+      console.error("Withdraw error:", err);
+      const data = err?.response?.data;
+      let msg = data?.message || "Gagal mengajukan penarikan";
+
+      if (data?.errors) {
+        const detail = Object.values(data.errors).flat().join("\n");
+        msg = `${msg}\n\n${detail}`;
+      }
+
+      Alert.alert("Error", msg.toString());
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
