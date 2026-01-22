@@ -22,9 +22,21 @@ export default function RegisterScreen({ navigation }) {
     } catch (err) {
       console.log("Register error:", err);
       console.log("Register error response:", err?.response);
+      console.log("Validation details:", err?.response?.data); // Log data detail
+
       const status = err?.response?.status;
       const data = err?.response?.data;
-      const msg = data?.message || (data ? JSON.stringify(data) : err.message) || "Register gagal";
+
+      let msg = data?.message || "Register gagal";
+
+      // Handle Laravel style validation errors
+      if (data?.errors) {
+        const errorMessages = Object.values(data.errors).flat().join("\n");
+        msg = `${msg}\n\n${errorMessages}`;
+      } else if (data && !data.message) {
+        msg = JSON.stringify(data);
+      }
+
       Alert.alert(status ? `Error ${status}` : "Error", msg.toString());
     }
   };

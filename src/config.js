@@ -16,7 +16,7 @@ export const USE_MOCK_API = false;
  * BASE URL BACKEND
  * Digunakan hanya jika USE_MOCK_API = false
  */
-export const API_BASE_URL = "http://192.168.1.10:8000/api";
+export const API_BASE_URL = "https://banksampah.relativision.org/api";
 
 /**
  * TIMEOUT REQUEST (ms)

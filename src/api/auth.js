@@ -14,7 +14,6 @@ export const registerApi = (name, email, password, password_confirmation) => {
     email,
     password,
     password_confirmation,
-    device_name: "Mobile App",
   });
 };
 
