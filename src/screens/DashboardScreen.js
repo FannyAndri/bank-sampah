@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Platform } from "react-native";
 import { useEffect, useState } from "react";
 import { getProfile } from "../api/user";
 import QRCode from "react-native-qrcode-svg";
@@ -8,7 +8,7 @@ export default function DashboardScreen({ navigation }) {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    getProfile().then((res) => setUser(res.data));
+    getProfile().then((res) => setUser(res.data?.data ?? res.data));
   }, []);
 
   if (!user) {
@@ -34,7 +34,11 @@ export default function DashboardScreen({ navigation }) {
       {/* QR Code Card */}
       <Card style={styles.qrCard}>
         <Text style={styles.qrTitle}>QR Member</Text>
-        <QRCode value={user.member_code} size={160} />
+        {Platform.OS !== "web" ? (
+          <QRCode value={String(user.member_code ?? "")} size={160} />
+        ) : (
+          <Text style={{ margin: 20 }}>QR Code hanya tersedia di aplikasi mobile</Text>
+        )}
         <Text style={styles.memberCode}>{user.member_code}</Text>
       </Card>
 

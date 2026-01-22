@@ -7,7 +7,7 @@ export default function ProfileScreen() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    getProfile().then((res) => setUser(res.data));
+    getProfile().then((res) => setUser(res.data?.data ?? res.data));
   }, []);
 
   if (!user) {
